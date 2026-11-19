@@ -1,1 +1,1 @@
-# Threadhammer-Simulator
+# Rowhammer-Simulator
