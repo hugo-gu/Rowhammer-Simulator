@@ -55,9 +55,10 @@ def double_side_Hammer(bank, row, max_hammers):
     return i, flipped
 
 
-Bank1 = DRAMBank(n_rows=1024, n_bits=1024)
-Bank1.write_ones()
-hammer = single_side_Hammer(Bank1, 3, 100)
-plt.plot([x[0] for x in hammer[1]], [x[1] for x in hammer[1]], marker="o")
-plt.xlabel("Number of hammers"); plt.ylabel("bits flipped in the victim")
-plt.savefig("sweep.png")
+if __name__ == "__main__":
+    Bank1 = DRAMBank(n_rows=1024, n_bits=1024)
+    Bank1.write_ones()
+    hammer = single_side_Hammer(Bank1, 3, 100)
+    plt.plot([x[0] for x in hammer[1]], [x[1] for x in hammer[1]], marker="o")
+    plt.xlabel("Number of hammers"); plt.ylabel("bits flipped in the victim")
+    plt.savefig("sweep.png")

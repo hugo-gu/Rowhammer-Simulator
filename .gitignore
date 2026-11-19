@@ -1,1 +1,13 @@
 .venv/
+
+# Python cache
+__pycache__/
+
+# Simulation build and results
+sim_build/
+results.xml
+*.vcd
+*.fst
+
+# Generated plots
+*.png
