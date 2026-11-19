@@ -1,6 +1,9 @@
 #import cocotb
-#import matplotlib
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
+
+matplotlib.use("Agg")
 
 class DRAMBank():
     def __init__(self, n_rows, n_bits):
@@ -9,6 +12,8 @@ class DRAMBank():
         self.memory = np.zeros((n_rows, n_bits), dtype=float)
         self.tau = np.full((n_rows, n_bits), 1.0)  # Time constant for decay
         self.dq = 0.01
+        rng = np.random.default_rng(0)
+        self.suscept = rng.lognormal(0.0, 0.4, (n_rows, n_bits))
 
     def write_ones(self):
         self.memory.fill(1.0)
@@ -26,16 +31,33 @@ class DRAMBank():
         if row < 0 or row >= self.n_rows:
             raise ValueError("row index out of bounds")
         if row > 0:
-            self.memory[row-1] = self.memory[row-1] - self.dq
+            self.memory[row-1] = self.memory[row-1] - self.dq * self.suscept[row-1]
         if row < self.n_rows - 1:
-            self.memory[row+1] = self.memory[row+1] - self.dq
+            self.memory[row+1] = self.memory[row+1] - self.dq * self.suscept[row+1]
 
-Bank1 = DRAMBank(n_rows=8, n_bits=8)
+def single_side_Hammer(bank, row, max_hammers):
+    flipped = []
+    i = 0
+    for i in range(max_hammers):
+        bank.activate(row-1)
+        if (bank.read_row(row) ==0).sum() > len(flipped):
+            flipped.append((i, (bank.read_row(row) ==0).sum()))
+    return i, flipped
+    
+def double_side_Hammer(bank, row, max_hammers):
+    flipped = []
+    i = 0
+    for i in range(max_hammers):
+        bank.activate(row-1)
+        bank.activate(row+1)
+        if (bank.read_row(row) ==0).sum() > len(flipped):
+            flipped.append((i, (bank.read_row(row) ==0).sum()))
+    return i, flipped
+
+
+Bank1 = DRAMBank(n_rows=1024, n_bits=1024)
 Bank1.write_ones()
-#Bank1.leakage(dt=0.5)
-print (Bank1.read_row(2), Bank1.read_row(3), Bank1.read_row(4))
-
-for i in range(55):
-    Bank1.activate(3)
-
-print (Bank1.read_row(2), Bank1.read_row(3), Bank1.read_row(4))
+hammer = single_side_Hammer(Bank1, 3, 100)
+plt.plot([x[0] for x in hammer[1]], [x[1] for x in hammer[1]], marker="o")
+plt.xlabel("Number of hammers"); plt.ylabel("bits flipped in the victim")
+plt.savefig("sweep.png")
